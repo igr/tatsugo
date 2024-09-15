@@ -63,7 +63,7 @@ data class CellData(
  * Finally, the state of a cell.
  * It is a KV of [CellData] that represents the state of the
  * cell in each generation up to the latest.
- * Note: no need to use a concurent map(!)
+ * Note: no need to use a concurrent map(!)
  */
 data class CellState(
 	private val db: MutableMap<Int, CellData> = mutableMapOf(),
