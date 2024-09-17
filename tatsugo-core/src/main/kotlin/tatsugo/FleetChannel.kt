@@ -53,7 +53,10 @@ class FleetImpl(
 
 		val newParticle = particle.behavior(msg)
 
-		fleet[addr] = newParticle
+		if (newParticle != particle) {
+			// update the particle if changed
+			fleet[addr] = newParticle
+		}
 	}
 
 	/**
