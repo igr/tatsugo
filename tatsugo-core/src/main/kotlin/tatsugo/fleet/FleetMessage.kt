@@ -1,4 +1,6 @@
-package tatsugo
+package tatsugo.fleet
+
+import tatsugo.ParticleAddress
 
 /**
  * Internal message for Fleet.

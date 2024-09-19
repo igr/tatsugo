@@ -2,6 +2,7 @@ package tatsugo
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import tatsugo.fleet.FleetChannel
 
 interface Fleet {
 	/**
@@ -25,7 +26,7 @@ fun spawnFleet(
 	scope: CoroutineScope,
 	newParticle: ParticleSupplier
 ): FleetRef {
-	val fleet = FleetImpl(name, newParticle)
+	val fleet = FleetChannel(name, newParticle)
 	scope.launch { fleet.run() }
 	return fleet.ref()
 }

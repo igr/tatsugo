@@ -1,33 +1,23 @@
-package tatsugo
+package tatsugo.fleet
 
 import kotlinx.coroutines.channels.Channel
+import tatsugo.*
 import java.util.concurrent.ConcurrentHashMap
 
-/**
- * Fleet reference implementation.
- */
-internal class FleetRefImpl(
-	override val name: String,
-	private val mailbox: Channel<FleetMessage>
-) : FleetRef {
-
-	/**
-	 * Sends a message to [Particle].
-	 */
-	override suspend fun <M> send(particleAddress: ParticleAddress, msg: M) {
-		mailbox.send(ParticleMessage(particleAddress, msg))
-	}
-
-}
-
-class FleetImpl(
+class FleetChannel(
 	private val name: String,
 	private val newParticle: ParticleSupplier,
 ) : Fleet {
 
 	private val receiveChannel = Channel<FleetMessage>(capacity = Channel.UNLIMITED)
-	private val ref = FleetRefImpl(name, receiveChannel)
 	private val fleet = ConcurrentHashMap<ParticleAddress, Particle<*, *>>()
+
+	private val ref = object : FleetRef {
+		override val name: String = this@FleetChannel.name
+		override suspend fun <M> send(particleAddress: ParticleAddress, msg: M) {
+			receiveChannel.send(ParticleMessage(particleAddress, msg))
+		}
+	}
 
 	/**
 	 * Runs the whole Fleet.
