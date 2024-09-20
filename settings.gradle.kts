@@ -5,4 +5,5 @@ plugins {
 rootProject.name = "tatsugo"
 
 include("tatsugo-core")
+include("tatsugo-flow")
 include("examples")

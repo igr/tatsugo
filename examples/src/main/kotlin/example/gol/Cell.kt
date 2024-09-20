@@ -1,29 +1,40 @@
 package example.gol
 
 import example.gol.Cell.InitialState
-import example.gol.Cell.Msg
-import tatsugo.FleetRef
-import tatsugo.Particle
-import tatsugo.ParticleAddress
+import tatsugo.*
+import tatsugo.NextParticle.Companion.advance
+
+class CellLifecycle(private val size: Int) : ParticleLifecycle {
+	override fun onCreate(ref: FleetRef): (ParticleAddress) -> Particle? {
+		return {
+			Cell(
+				it,
+				ref,
+				CellState(max = calcMaxForAddress(it, size)),
+				::initialBehaviour
+			)
+		}
+	}
+}
 
 class Cell(
-	override val address: ParticleAddress,
+	val address: ParticleAddress,
 	val fleetRef: FleetRef,
 	val state: CellState,
-	val behavior: suspend (Cell, Msg) -> Cell
-) : Particle<Cell, Msg> {
+	val behavior: (Cell, Message) -> NextParticle
+) : Particle {
 
-	override suspend fun behavior(msg: Msg): Cell = behavior(this, msg)
+	override fun behavior(msg: Message): NextParticle = behavior(this, msg)
 
 	/**
 	 * Common utility to change the state and behavior of the cell.
 	 */
-	fun to(newState: CellState, newBehavior: suspend (Cell, Msg) -> Cell): Cell =
+	fun to(newState: CellState, newBehavior: (Cell, Message) -> NextParticle): Cell =
 		Cell(address, fleetRef, newState, newBehavior)
 
 	// messages
 
-	sealed interface Msg
+	sealed interface Msg : Message
 	data class InitialState(
 		val cellStatus: CellStatus,
 		val gridSize: Int,
@@ -32,37 +43,25 @@ class Cell(
 		val generation: Int,
 		val status: CellStatus
 	): Msg
-
-	companion object {
-		fun new(fleetRef: FleetRef, address: ParticleAddress, max: Int): Cell {
-			return Cell(
-				address,
-				fleetRef,
-				CellState(max = max),
-				::initialBehaviour
-			)
-		}
-	}
 }
-
 
 /**
  * Initial behavior of the cell.
  */
-suspend fun initialBehaviour(cell: Cell, msg: Msg): Cell {
+private fun initialBehaviour(cell: Cell, msg: Message): NextParticle {
 	val state = cell.state
 	val pos = addressToPosition(cell.address)
 	return when (msg) {
 		is InitialState -> {
 			// generation 0, announce status to neighbours
-			val tickMsg = Grid.Tick(cell.fleetRef, pos.first, pos.second, 0, msg.cellStatus)
-			cell.fleetRef.send(Grid.address, tickMsg)
+			val tickEvent = Grid.Tick(cell.fleetRef, pos.first, pos.second, 0, msg.cellStatus)
 
 			// update the status of the cell
 			val newState = state.update(0) { it.copy(status = msg.cellStatus) }
-			cell.to(newState, ::livingBehaviour)
+
+			advance(cell.to(newState, ::livingBehaviour)).emit(tickEvent)
 		}
-		else -> cell
+		else -> advance(cell)
 	}
 }
 
@@ -70,7 +69,7 @@ suspend fun initialBehaviour(cell: Cell, msg: Msg): Cell {
  * The living behaviour of the cell.
  * Example when behaviour is implemented outside the cell.
  */
-private suspend fun livingBehaviour(cell: Cell, msg: Msg): Cell {
+private fun livingBehaviour(cell: Cell, msg: Message): NextParticle {
 	return when (msg) {
 		is Cell.AcceptNeighbourStatus -> {
 			val currentCell = cell.state[msg.generation]
@@ -82,18 +81,17 @@ private suspend fun livingBehaviour(cell: Cell, msg: Msg): Cell {
 				val nextGeneration = msg.generation + 1
 				val position = addressToPosition(cell.address)
 
-				val tickMsg = Grid.Tick(cell.fleetRef, position.first, position.second, nextGeneration, newCell.status)
-				cell.fleetRef.send(Grid.address, tickMsg)
+				val tickEvent = Grid.Tick(cell.fleetRef, position.first, position.second, nextGeneration, newCell.status)
 
 				val newState = cell.state.update(nextGeneration) { newCell }
-				cell.to(newState, ::livingBehaviour)
+
+				advance(cell.to(newState, ::livingBehaviour)).emit(tickEvent)
 			} else {
 				val newState = cell.state.update(msg.generation) { updatedCell }
-				cell.to(newState, ::livingBehaviour)
+
+				advance(cell.to(newState, ::livingBehaviour))
 			}
 		}
-		else -> cell
+		else -> advance(cell)
 	}
 }
-
-

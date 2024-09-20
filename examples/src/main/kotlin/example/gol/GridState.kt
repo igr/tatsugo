@@ -44,14 +44,14 @@ data class GridState(
 	fun printMatrix(generation: Int) {
 		println("\n---GRID for generation $generation after ${System.currentTimeMillis() - startTime}ms---")
 
-		val matrix = db[generation]?.matrix ?: return
-		val gridSize = config.gridSize
-		for (i in 0..<gridSize) {
-			for (j in 0..<gridSize) {
-				print(if (matrix[i][j] == CellStatus.Alive) "*" else "·")
-			}
-			println()
-		}
+//		val matrix = db[generation]?.matrix ?: return
+//		val gridSize = config.gridSize
+//		for (i in 0..<gridSize) {
+//			for (j in 0..<gridSize) {
+//				print(if (matrix[i][j] == CellStatus.Alive) "*" else "·")
+//			}
+//			println()
+//		}
 	}
 
 	/**

@@ -1,32 +1,17 @@
 package tatsugo
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
-import tatsugo.fleet.FleetChannel
+@JvmInline
+value class FleetRef(val id: String)
 
 interface Fleet {
 	/**
 	 * Runs the Fleet.
 	 */
-	suspend fun run()
+	fun run()
 	/**
-	 * Reference to the Fleet.
+	 * Returns Fleet reference.
 	 */
 	fun ref(): FleetRef
-}
 
-typealias ParticleSupplier = (FleetRef, ParticleAddress) -> Particle<*, *>
-
-
-/**
- * Spawns a new Fleet.
- */
-fun spawnFleet(
-	name: String,
-	scope: CoroutineScope,
-	newParticle: ParticleSupplier
-): FleetRef {
-	val fleet = FleetChannel(name, newParticle)
-	scope.launch { fleet.run() }
-	return fleet.ref()
+	fun bind(particleLifecycle: ParticleLifecycle)
 }

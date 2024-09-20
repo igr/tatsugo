@@ -1,12 +1,19 @@
 # 🥔 Tatsugō
 
-**Tatsugō** is a lightweight engine written in Kotlin for running **particles**: small chunks of code.
+**Tatsugō** is a lightweight Event driven engine written in Kotlin for running **particles** and event handlers.
 
 **Tatsugō** is made of:
 
-+ **Fleet**: a collection of particles. Usually, a **Fleet** is a collection of particles that belong to the same domain. You can think of Fleet as a table in database, or a collection in datastore.
-+ **Particle**: a small piece of code that can be run in parallel. It is run and managed by belonging Fleet.
-+ **Message**: a message is sent to a particle to run it. A message can contain data that can be used by the particle.
++ **Bus**: event bus abstraction; essentially a hot flow that broadcasts events to all subscribers;
++ **Event**: a event that is sent via the bus to all subscribers;
++ **Particle**: a small piece of code defined by address and behaviour, that runs in response to messages, in queue;
++ **Fleet**: a collection of particles, usually that belong to the same domain. You can think of Fleet as a table in database, or a collection in datastore.
++ **Message**: a message to a particle.
+
+## Events and event handlers
+
+Event handler is usually a single instance that process all events of a certain type.
+
 
 ## Particle
 

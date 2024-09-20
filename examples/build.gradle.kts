@@ -4,6 +4,7 @@ plugins {
 
 dependencies {
     implementation(project(":tatsugo-core"))
+    implementation(project(":tatsugo-flow"))
 }
 
 application {
