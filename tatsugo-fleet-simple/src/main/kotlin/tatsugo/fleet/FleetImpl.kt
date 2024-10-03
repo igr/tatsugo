@@ -3,35 +3,12 @@ package tatsugo.fleet
 import tatsugo.*
 
 class FleetImpl(
-	private val fleetRef: FleetRef,
-	private val eventBus: Bus,
+	private val fleetRef: FleetRef
 ) : Fleet {
 
 	override fun ref(): FleetRef = fleetRef
 
 	private val fleet = mutableMapOf<ParticleAddress, Particle>()
-
-	/**
-	 * Runs the whole Fleet.
-	 * Very simple command handler that receives events
-	 * and puts them into the queue.
-	 */
-	fun runFleet() {
-		eventBus.bind(object : Queue {
-			override fun isApplicable(event: Event): Boolean {
-				if (event is FleetMessage<*>) {
-					if (event.fleet == fleetRef) {
-						return true
-					}
-				}
-				return false
-			}
-			override fun process(event: Event): Array<Event> {
-				val message = event as FleetMessage<*>
-				return runParticle(message.message, message.address)
-			}
-		})
-	}
 
 	/**
 	 * Runs a Particle.
@@ -68,6 +45,25 @@ class FleetImpl(
 			}
 		}
 		throw UnknownParticleException(fleetRef, addr)
+	}
+
+	/**
+	 * Creates a very simple queue that receives events
+	 * and puts them into the queue.
+	 */
+	override fun asQueue(): Queue = object : Queue {
+		override fun isApplicable(event: Event): Boolean {
+			if (event is FleetMessage<*>) {
+				if (event.fleet == fleetRef) {
+					return true
+				}
+			}
+			return false
+		}
+		override fun process(event: Event): Array<Event> {
+			val message = event as FleetMessage<*>
+			return runParticle(message.message, message.address)
+		}
 	}
 
 }

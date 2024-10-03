@@ -33,7 +33,8 @@ suspend fun main(): Unit = coroutineScope {
 
 	// Fleet: CELLS
 
-	val fleet = spawnSimpleFleet("cells", bus)
+	val fleet = spawnSimpleFleet("cells")
+	bus.bind(fleet.asQueue())
 
 	fleet.bind(CellLifecycle(SIZE))
 

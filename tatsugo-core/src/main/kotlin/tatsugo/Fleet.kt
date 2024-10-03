@@ -13,4 +13,9 @@ interface Fleet {
 	 * Binds particle to this fleet.
 	 */
 	fun bind(particleLifecycle: ParticleLifecycle)
+
+	/**
+	 * Creates a [Queue] out of the Fleet.
+	 */
+	fun asQueue(): Queue
 }
